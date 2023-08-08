@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, redirect } from "react-router-dom";
+import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import Cart from "../cart/Cart";
 import { createOrder } from "../../services/apiRestaurant";
 
@@ -35,6 +35,9 @@ const fakeCart = [
 
 function CreateOrder() {
   // const [withPriority, setWithPriority] = useState(false);
+  const navigation = useNavigation();
+  const isSubmited = navigation.state === "submitting";
+  const formErrors = useActionData();
   const cart = fakeCart;
 
   return (
@@ -52,6 +55,7 @@ function CreateOrder() {
           <div>
             <input type="tel" name="phone" required />
           </div>
+          {formErrors?.phone && <p>{formErrors.phone}</p>}
         </div>
 
         <div>
@@ -74,7 +78,7 @@ function CreateOrder() {
 
         <div>
           <input type="hidden" name="cart" value={JSON.stringify(cart)} />
-          <button>Order now</button>
+          <button disabled={isSubmited}>Order now</button>
         </div>
       </Form>
     </div>
@@ -90,7 +94,13 @@ export async function newOrderAction({ request }) {
     priority: data.priority === "on",
   };
   const newOrder = await createOrder(order);
+  const errors = {};
+  if (!isValidPhone(data.phone))
+    errors.phone = "Please Enter a valide Phone number";
+
+  if (Object.keys(errors).length > 0) return errors;
 
   return redirect(`/order/${newOrder.id}`);
 }
 export default CreateOrder;
+// the styles in this application using the tailwind ;
